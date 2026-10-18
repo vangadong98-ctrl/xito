@@ -420,6 +420,8 @@ select.inp{appearance:auto}
 @keyframes leadava{15%,70%{box-shadow:0 0 0 3px var(--brass-hi),0 0 18px 4px rgba(243,207,122,.8)}}
 @media (prefers-reduced-motion:reduce){.seat.leadfx .cards,.seat.leadfx .ava{animation:none}}
 
+.note.ver{font-size:10px;opacity:.6;margin:0}
+
 </style>
 <script>
 /* ===== CẤU HÌNH FIREBASE =====
@@ -481,7 +483,8 @@ window.FIREBASE_CONFIG = {
     <div class="field"><label for="codeIn">Hoặc nhập mã bàn của bạn bè</label>
       <div class="join"><input class="inp" id="codeIn" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off"><button class="btn call" id="joinBtn">Vào</button></div></div>
     <div class="top3" id="top3"></div>
-    <div class="lob-row"><button class="link" id="helpBtn">Thứ tự bài</button><button class="link" id="themeBtn">Giao diện & sự kiện</button><button class="link" id="adBtn2">+9.000 xu</button></div>
+    <div class="lob-row"><button class="link" id="helpBtn">Thứ tự bài</button><button class="link" id="themeBtn">Giao diện & sự kiện</button><button class="link" id="adBtn2">+9.000 xu</button><button class="link" id="sndTest2">Nghe thử âm thanh</button></div>
+    <p class="note ver">Phiên bản 18/10 16:06</p>
     <p class="note" id="modeNote"></p>
   </div>
 </div>
@@ -506,7 +509,7 @@ window.FIREBASE_CONFIG = {
 
 <div class="sheetbg" id="chatOv" hidden>
   <div class="sheet">
-    <header><h3>Trò chuyện</h3><button class="pill" id="voiceBtn" type="button">Giọng đọc: Bật</button><button class="icon" id="chatClose" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <header><h3>Trò chuyện</h3><button class="pill" id="sndTest" type="button">Nghe thử</button><button class="pill" id="voiceBtn" type="button">Giọng đọc: Bật</button><button class="icon" id="chatClose" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
     <div class="log" id="log"></div>
     <div class="emorow" id="emoRow"></div>
     <div class="quick" id="quick"></div>
@@ -1135,6 +1138,8 @@ function clack(at,g){const f=3000+Math.random()*1600;blip(f,f*.92,.03,g,at);blip
 function trombone(f,at,d){if(!soundOn||!audio())return;const t=ac.currentTime+at,o=ac.createOscillator(),lp=ac.createBiquadFilter(),v=ac.createGain();o.type='sawtooth';o.frequency.setValueAtTime(f,t);
   if(d>.5){const lfo=ac.createOscillator(),lg=ac.createGain();lfo.frequency.value=6;lg.gain.value=f*.03;lfo.connect(lg).connect(o.frequency);lfo.start(t);lfo.stop(t+d)}
   o.frequency.exponentialRampToValueAtTime(f*.97,t+d);lp.type='lowpass';lp.frequency.value=1100;v.gain.setValueAtTime(.0001,t);v.gain.exponentialRampToValueAtTime(.12,t+.04);v.gain.setValueAtTime(.12,t+d*.7);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(lp).connect(v).connect(sfxBus);o.start(t);o.stop(t+d+.05)}
+/* briefly lower the music so table calls are clearly heard */
+function hush(sec){if(!ac||!musicBus||!musicOn)return;const t=ac.currentTime;musicBus.gain.cancelScheduledValues(t);musicBus.gain.setTargetAtTime(.2,t,.03);musicBus.gain.setTargetAtTime(1,t+sec,.25)}
 const sfx={
   deal(){sweep(.24,6000,1500,.55);snap(.5,.28)},
   shuffle(){for(let i=0;i<28;i++)snap(.16+Math.random()*.12,i*.024+Math.random()*.008,3000,false);sweep(.3,1800,6000,.45,.72);snap(.4,1.02)},
@@ -1148,15 +1153,15 @@ const sfx={
   tick(){tone(1100,.03,'sine',.04)},
   pop(){blip(420,900,.09,.2)},
   // Tố: a stack of chips slammed down, then two rising horn notes
-  raise(){for(let k=0;k<5;k++)clack(k*.035+Math.random()*.01,.2);blip(180,60,.18,.45,.16);snap(.4,.16,1200,false);tone(587,.16,'sawtooth',.06,.24);tone(880,.3,'sawtooth',.07,.36);tone(880,.3,'triangle',.08,.36)},
+  raise(){hush(1.1);for(let k=0;k<5;k++)clack(k*.035+Math.random()*.01,.3);blip(180,60,.18,.7,.16);snap(.55,.16,1200,false);tone(587,.18,'sawtooth',.11,.24);tone(880,.34,'sawtooth',.12,.38);tone(880,.34,'triangle',.14,.38)},
   // Theo: chips pushed across the felt, one soft knock
-  call(){sweep(.22,900,2600,.32);for(let k=0;k<3;k++)clack(.12+k*.045,.14);blip(220,140,.07,.18,.3)},
+  call(){hush(.8);sweep(.22,900,2600,.5);for(let k=0;k<3;k++)clack(.12+k*.045,.26);blip(220,140,.09,.4,.32);tone(523,.22,'triangle',.1,.34)},
   // Xem: two knuckle taps on the table
-  check(){[0,.13].forEach(a=>{blip(160,70,.09,.5,a);snap(.18,a,700,false)})},
+  check(){hush(.6);[0,.14].forEach(a=>{blip(170,70,.1,.8,a);snap(.3,a,700,false)})},
   // Tất tay: drum roll, chip avalanche, low boom
-  allin(){for(let i=0;i<16;i++)blip(120+Math.random()*30,60,.05,.12+i*.012,i*.035);for(let k=0;k<12;k++)clack(.55+k*.03+Math.random()*.02,.16);blip(110,38,.7,.7,.58);tone(220,.6,'sawtooth',.05,.6);tone(330,.6,'sawtooth',.04,.6)},
+  allin(){hush(1.8);for(let i=0;i<16;i++)blip(120+Math.random()*30,60,.05,.12+i*.012,i*.035);for(let k=0;k<12;k++)clack(.55+k*.03+Math.random()*.02,.16);blip(110,38,.7,.7,.58);tone(220,.6,'sawtooth',.05,.6);tone(330,.6,'sawtooth',.04,.6)},
   // strongest face-up hand announced: a shimmer up to a bell
-  lead(){for(let i=0;i<8;i++)tone(784*Math.pow(2,i/8),.12,'sine',.05,i*.035);tone(1568,1.1,'sine',.12,.3);tone(2349,.9,'sine',.05,.32);tone(784,1,'triangle',.06,.3)}
+  lead(){hush(1.4);for(let i=0;i<8;i++)tone(784*Math.pow(2,i/8),.12,'sine',.05,i*.035);tone(1568,1.1,'sine',.12,.3);tone(2349,.9,'sine',.05,.32);tone(784,1,'triangle',.06,.3)}
 };
 function drawSnd(){$('sndIco').innerHTML=soundOn?'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/>':'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/>'}
 
@@ -2089,11 +2094,23 @@ function speakLine(text) {
 for (const k in VLINES) sfx[k] = () => speakLine(VLINES[k]);
 function callout(k, after = 0) { if (voiceOn && soundOn) setTimeout(() => sfx[k](), after * 1000); }
 /* iPhone only lets a page speak after a tap: say nothing once on the first tap */
-document.addEventListener('pointerdown', function primeSpeech() {
-  document.removeEventListener('pointerdown', primeSpeech, true);
-  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
-}, true);
+let speechPrimed = false;
+function primeSpeech() {
+  if (speechPrimed) return; speechPrimed = true;
+  try { const u = new SpeechSynthesisUtterance('.'); u.volume = 0.01; u.rate = 2; if (vVoice) u.voice = vVoice; speechSynthesis.speak(u); } catch (e) {}
+}
+['touchend', 'click'].forEach(ev => document.addEventListener(ev, primeSpeech, true));
+/* "Nghe thử": play every table call with its voice so a player can check sound on their phone */
+function soundTest() {
+  unlock(); primeSpeech();
+  if (!soundOn) { soundOn = true; save('xito_snd', true); drawSnd(); $('sndBtn').classList.remove('off'); }
+  const seq = [['raise', 'vRaise', 'Tố'], ['call', 'vCall', 'Theo'], ['check', 'vCheck', 'Xem'], ['allin', 'vAllin', 'Tất tay']];
+  seq.forEach(([fx, v, label], n) => setTimeout(() => { sfx[fx](); toast('🔊 ' + label, 1100); if (voiceOn) setTimeout(() => sfx[v](), 450); }, n * 1900));
+  setTimeout(() => { sfx.lead(); toast('🔊 Báo bài ngửa mạnh nhất', 1500); if (voiceOn) setTimeout(() => speakLine('Đôi K'), 650); }, seq.length * 1900);
+  setTimeout(() => { if (!vVoice) toast('Máy này không có giọng đọc tiếng Việt, chỉ phát tiếng hiệu ứng.', 4500); }, seq.length * 1900 + 2200);
+}
 function drawVoice() { const b = $('voiceBtn'); if (!b) return; b.classList.toggle('on', voiceOn); b.textContent = voiceOn ? 'Giọng đọc: Bật' : 'Giọng đọc: Tắt'; }
+$('sndTest').onclick = soundTest; $('sndTest2').onclick = soundTest;
 $('voiceBtn').onclick = () => { voiceOn = !voiceOn; save('xito_voice2', voiceOn); drawVoice(); if (voiceOn) callout('vCall'); };
 drawVoice();
 
